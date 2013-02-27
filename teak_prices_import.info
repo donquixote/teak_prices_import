@@ -1,0 +1,5 @@
+name = Teakmoebel prices import
+description = Import prices.csv from main site
+core = 7.x
+
+dependencies[] = xautoload
