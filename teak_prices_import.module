@@ -1,0 +1,42 @@
+<?php
+
+use Drupal\krumong as k;
+use Drupal\teak_prices_import\ServiceCache;
+
+/**
+ * Implements hook_menu()
+ */
+function teak_prices_import_menu() {
+  $items[] = array();
+  $items['teak-prices-import/all'] = array(
+    'access callback' => TRUE,
+    'page callback' => 'teak_prices_import_page',
+    'file' => 'teak_prices_import.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['teak-prices-import/%commerce_product'] = array(
+    'access callback' => TRUE,
+    'page callback' => 'teak_prices_import_page',
+    'page arguments' => array(1),
+    'file' => 'teak_prices_import.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Get lazy-created service objects from the service cache / registry.
+ *
+ * @param string $key
+ *   Key representing a service.
+ *   Possible values can be seen in the ServiceFactory class, each get_* method
+ *   is for one possible key.
+ */
+function teak_prices_import($key = 'main') {
+  static $cache;
+  if (!isset($cache)) {
+    $factory = new ServiceCache\ServiceFactory();
+    $cache = new ServiceCache\ServiceCache($factory);
+  }
+  return isset($key) ? $cache->$key : $cache;
+}

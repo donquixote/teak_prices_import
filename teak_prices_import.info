@@ -2,4 +2,8 @@ name = Teakmoebel prices import
 description = Import prices.csv from main site
 core = 7.x
 
+; PHP 5.3 needed for str_getcsv()
+php = 5.3
+
+; xautoload for PSR-0 class loading
 dependencies[] = xautoload
