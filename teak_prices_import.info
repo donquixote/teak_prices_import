@@ -7,3 +7,4 @@ php = 5.3
 
 ; xautoload for PSR-0 class loading
 dependencies[] = xautoload
+dependencies[] = krumong
