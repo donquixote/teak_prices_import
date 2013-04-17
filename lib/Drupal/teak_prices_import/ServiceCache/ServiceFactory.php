@@ -25,6 +25,10 @@ class ServiceFactory {
   }
 
   protected function get_fetcher($cache) {
-    return new m\CurlFetcher('http://teakmeubelen.nl/prices.csv');
+    $url = variable_get('teak_prices_import_url');
+    if (empty($url)) {
+      throw new Exception("The variable 'teak_prices_import_url' needs to be set, e.g. with 'drush vset'");
+    }
+    return new m\CurlFetcher($url);
   }
 }
