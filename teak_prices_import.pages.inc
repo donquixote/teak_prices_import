@@ -25,7 +25,7 @@ function teak_prices_import_page($sku = NULL) {
     ) as $key => $msg) {
       $n = count($log[$key]);
       $out .= "$msg: $n";
-      $out .= krumong()->dump($log[$key]);
+      $out .= krumong('main')->dump($log[$key]);
     }
     return $out;
   }
