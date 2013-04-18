@@ -9,15 +9,24 @@ use Drupal\krumong as k;
  *   Result of commerce_product_load(),
  *   or null in case that all products are to be updated.
  */
-function teak_prices_import_page($product = NULL) {
+function teak_prices_import_page($sku = NULL) {
 
   $main = teak_prices_import();
   if (!empty($product)) {
-    $main->updateProduct($product);
+    $main->updateProduct($sku);
   }
   else {
-    $ids = $main->updateAll();
-    k\dpm($ids);
-    return print_r($ids, TRUE);
+    $log = $main->updateAll();
+    $out = '';
+    foreach (array(
+      'insert' => "New products that were created",
+      'update' => "Existing products that were updated",
+      'skip' => "Existing products that have not changed",
+    ) as $key => $msg) {
+      $n = count($log[$key]);
+      $out .= "$msg: $n";
+      $out .= krumong()->dump($log[$key]);
+    }
+    return $out;
   }
 }

@@ -11,18 +11,24 @@ class Main {
     $this->services = $services;
   }
 
-  function updateProduct($product) {
-    $prices = $this->pricesBySKU();
-    return $this->services->importer->importProductPrice($product, $prices);
+  function updateProduct($sku) {
+    $data = $this->productDataBySKU();
+    if (isset($data[$sku])) {
+      $importer = new Importer();
+      $importer->importProduct($data[$sku]);
+      return $importer->getLog();
+    }
   }
 
   function updateAll() {
-    $prices = $this->pricesBySKU();
-    return $this->services->importer->importPrices($prices);
+    $data = $this->productDataBySKU();
+    $importer = new Importer();
+    $importer->importProducts($data);
+    return $importer->getLog();
   }
 
-  function pricesBySKU() {
+  function productDataBySKU() {
     $csv = $this->services->fetcher->fetchCsv();
-    return $this->services->csvParser->parseCsvPrices($csv);
+    return $this->services->csvParser->parseCsvData($csv);
   }
 }

@@ -16,10 +16,6 @@ class ServiceFactory {
     return new m\Main($cache);
   }
 
-  protected function get_importer($cache) {
-    return new m\Importer();
-  }
-
   protected function get_csvParser($cache) {
     return new m\CsvParser();
   }

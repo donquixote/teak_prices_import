@@ -14,7 +14,7 @@ function teak_prices_import_menu() {
     'file' => 'teak_prices_import.pages.inc',
     'type' => MENU_CALLBACK,
   );
-  $items['teak-prices-import/%commerce_product'] = array(
+  $items['teak-prices-import/%'] = array(
     'access callback' => TRUE,
     'page callback' => 'teak_prices_import_page',
     'page arguments' => array(1),
