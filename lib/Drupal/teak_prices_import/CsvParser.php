@@ -50,6 +50,7 @@ class CsvParser {
       'prijs' => 'price',
       'title' => 'title',
       'titel' => 'title',
+      'images' => 'images',
     );
     $normalized = array();
     foreach ($header as $index => $name) {

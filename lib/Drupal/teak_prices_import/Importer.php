@@ -3,6 +3,7 @@
 namespace Drupal\teak_prices_import;
 use Drupal\krumong as k;
 
+use Drupal\teak_prices_import\Exception\FileManagerException;
 
 class Importer {
 
@@ -10,6 +11,12 @@ class Importer {
     'skip' => array(),
     'insert' => array(),
     'update' => array(),
+  );
+
+  protected $keys = array(
+    'price' => TRUE,
+    'title' => TRUE,
+    'images' => TRUE,
   );
 
   /**
@@ -53,14 +60,55 @@ class Importer {
    */
   protected function productSave($row) {
 
+    // Record which fields have changed.
+    $updated = array();
+    $action = 'update';
+
+    $product = $this->prepareProduct($row, $action);
+    $wrapper = new ProductWrapper($product);
+
+    // Set values.
+    foreach ($this->keys as $key => $enabled) {
+      if ($enabled && !empty($row[$key])) {
+        $method = 'set_' . $key;
+        try {
+          $wrapper->$method($row[$key]);
+        }
+        catch (FileManagerException $e) {
+          drupal_set_message($e->getMessage(), 'error');
+          drupal_set_message('No further images will be imported in this request, to prevent a flood of errors.', 'error');
+          // Stop with file imports for this request, to avoid tons of errors.
+          $this->keys['images'] = FALSE;
+        }
+        catch (\Exception $e) {
+          drupal_set_message($e->getMessage(), 'error');
+          drupal_set_message('No further images will be imported in this request, to prevent a flood of errors.', 'error');
+          // Stop with file imports for this request, to avoid tons of errors.
+          $this->keys['images'] = FALSE;
+        }
+      }
+    }
+
+    $updated = $wrapper->getUpdated();
+
+    // Save, if there are any changes.
+    if (!empty($updated)) {
+      commerce_product_save($product);
+    }
+    else {
+      $action = 'skip';
+    }
+
+    $combined_key = $product->product_id . ' : ' . $row['sku'];
+    $this->log[$action][$combined_key] = $updated;
+  }
+
+  protected function prepareProduct($row, &$action) {
+
     // Attempt to load existing product
     if (isset($row['product_id'])) {
       $product = commerce_product_load($row['product_id']);
     }
-
-    // Record which fields have changed.
-    $updated = array();
-    $action = 'update';
 
     // Create new product, if not exists
     if (empty($product)) {
@@ -74,44 +122,7 @@ class Importer {
       $action = 'insert';
     }
 
-    // Set the price
-    if (!empty($row['price'])) {
-      $currency_code = commerce_default_currency();
-      if (0
-        || empty($product->commerce_price[LANGUAGE_NONE][0]['amount'])
-        || empty($product->commerce_price[LANGUAGE_NONE][0]['currency_code'])
-        || $product->commerce_price[LANGUAGE_NONE][0]['amount'] !== $row['price']
-        || $product->commerce_price[LANGUAGE_NONE][0]['currency_code'] !== $currency_code
-      ) {
-        $product->commerce_price[LANGUAGE_NONE][0] = array(
-          'amount' => $row['price'],
-          'currency_code' => $currency_code,
-        );
-        $updated['price'] = ($row['price'] * 0.01) . ' ' . $currency_code;
-      }
-    }
-
-    // Set the title, if given
-    if (!empty($row['title'])) {
-      if (0
-        || empty($product->title)
-        || 'import' === $product->title
-      ) {
-        $product->title = $row['title'];
-        $updated['title'] = $row['title'];
-      }
-    }
-
-    // Save, if there are any changes.
-    if (!empty($updated)) {
-      commerce_product_save($product);
-    }
-    else {
-      $action = 'skip';
-    }
-
-    $combined_key = $product->product_id . ' : ' . $row['sku'];
-    $this->log[$action][$combined_key] = $updated;
+    return $product;
   }
 
   /**
